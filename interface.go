@@ -21,19 +21,25 @@ type GoPool interface {
 }
 
 type goPool struct {
-	// 缩容最小值
 	minRoutineSize int
-	// 扩容最大值
 	maxRoutineSize int
-	// 扩容临界值，缩容是该值的50%
-	criticalValue float64
+	criticalValue  float64
 
-	// tune pool size interval time
 	tunePeriod time.Duration
 	pool       *ants.Pool
 	lock       sync.Locker
 }
 
+//
+// NewGoPool
+//  @param minSize 缩容最小值
+//  @param maxSize 扩容最大值
+//  @param criticalValue 扩容临界值，缩容是该值的50%
+//  @param tuneInterval  tune pool size interval time
+//  @param panicHandler  panic handler function
+//  @return GoPool
+//  @return error
+//
 func NewGoPool(minSize, maxSize int, criticalValue float64, tuneInterval time.Duration, panicHandler func(interface{})) (GoPool, error) {
 	if minSize < 0 || maxSize < minSize {
 		return nil, errors.New("invalid size")

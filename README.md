@@ -1,0 +1,1 @@
+gpool is an ants based pool that automatically resizes goroutines.

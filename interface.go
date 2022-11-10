@@ -14,8 +14,10 @@ type GoPool interface {
 	SetPoolMaxSize(size int) error
 	// SubmitFunc asynchronously submit functions to goroutines for execution
 	SubmitFunc(f func()) error
-	// GetCurrentGoroutineNum get the current number of busy goroutines
+	// GetCurrentGoroutineNum get the current number of running goroutines
 	GetCurrentGoroutineNum() int
+	// GetCurrentPoolCap get the current number of pool capacity
+	GetCurrentPoolCap() int
 	// Close pool recycle && release
 	Close()
 }

@@ -8,14 +8,33 @@ import (
 
 // 扩容数量
 func (g *goPool) calcExpansionNum() int {
-	var ret = 10
-	return ret
+	var newcap = g.pool.Cap()
+	doublecap := newcap + newcap
+
+	if g.pool.Cap() < 1024 {
+		newcap = doublecap
+	} else {
+		newcap += newcap / 4
+
+		// 超过最大限制 或是 溢出
+		if newcap > g.maxRoutineSize || newcap <= 0 {
+			newcap = g.maxRoutineSize
+		}
+	}
+
+	return newcap
 }
 
 // 缩减数量
 func (g *goPool) calcReduceNum() int {
-	var ret = 10
-	return ret
+	var newcap = g.pool.Cap() / 4
+
+	// 小于最小限制
+	if newcap < g.minRoutineSize {
+		newcap = g.minRoutineSize
+	}
+
+	return newcap
 }
 
 // 自动扩容
@@ -24,10 +43,10 @@ func (g *goPool) autoTune() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		free := g.pool.Running()
+		runNum := g.pool.Running()
 		poolCap := g.pool.Cap()
-		percentUsed := float64(free) / float64(g.maxRoutineSize)
-		reduceCriticalValue := g.criticalValue / 2
+		percentUsed := float64(runNum) / float64(poolCap)
+		reduceCriticalValue := g.criticalValue * 0.5
 
 		// 占比大于临界值，并且当前池大小 < 可扩容的最大值，则扩容池大小
 		if percentUsed > g.criticalValue && poolCap < g.maxRoutineSize {
@@ -78,7 +97,11 @@ func (g *goPool) SubmitFunc(f func()) error {
 }
 
 func (g *goPool) GetCurrentGoroutineNum() int {
-	return g.pool.Free()
+	return g.pool.Running()
+}
+
+func (g *goPool) GetCurrentPoolCap() int {
+	return g.pool.Cap()
 }
 
 func (g *goPool) Close() {
